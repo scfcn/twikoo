@@ -55,8 +55,8 @@ const xml2js = getXml2js();
 
 // 极验行为验证 4.0 配置
 const geetestConfig = {
-  captcha_id: '你的captcha_id', // 替换为极验后台获取的 captcha_id
-  captcha_key: '你的captcha_key', // 替换为极验后台获取的 captcha_key
+  captcha_id: '0f37bc19dfae3262b14094179cec314f', // 替换为极验后台获取的 captcha_id
+  captcha_key: 'e2ad203f0694f0a13d34b0e91a426112', // 替换为极验后台获取的 captcha_key
   validateUrl: 'https://gcaptcha4.geetest.com/validate' // 极验二次验证接口
 };
 
