@@ -2,7 +2,7 @@
  * ip2region 纯内存查询器
  * (c) 2025-present Mintimate
  * 不依赖 fs 模块，适用于 EdgeOne Pages Node Function
- * 
+ *
  * 基于 @imaegoo/node-ip2region 的 memorySearchSync 方法改写
  */
 
@@ -13,7 +13,7 @@ const INDEX_BLOCK_LENGTH = 12
 /**
  * 将 IP 地址转换为长整型
  */
-function ip2long(ip) {
+function ip2long (ip) {
   const arr = ip.split('.')
   if (arr.length !== 4) {
     throw new Error('invalid ip')
@@ -31,7 +31,7 @@ function ip2long(ip) {
 /**
  * 从 Buffer 中读取 32 位无符号整数（小端序）
  */
-function getLong(buffer, offset) {
+function getLong (buffer, offset) {
   const val =
     (buffer[offset] & 0x000000ff) |
     ((buffer[offset + 1] << 8) & 0x0000ff00) |
@@ -49,7 +49,7 @@ let totalBlocks = 0
 /**
  * 初始化数据库
  */
-function initDatabase() {
+function initDatabase () {
   if (dbBuffer !== null) return
 
   dbBuffer = getIp2RegionBuffer()
@@ -63,7 +63,7 @@ function initDatabase() {
  * @param {string} ip - IPv4 地址
  * @returns {{ city: number, region: string } | null}
  */
-export function searchSync(ip) {
+export function searchSync (ip) {
   // 初始化数据库
   initDatabase()
 
@@ -122,7 +122,7 @@ export function searchSync(ip) {
  * @param {boolean} detail - 是否返回详细信息
  * @returns {string} 归属地字符串
  */
-export function getIpRegion(ip, detail = false) {
+export function getIpRegion (ip, detail = false) {
   if (!ip) return ''
 
   try {

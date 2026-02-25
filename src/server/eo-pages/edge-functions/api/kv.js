@@ -2,10 +2,10 @@
  * Twikoo EdgeOne Pages Edge Function - KV 数据库操作层
  * (c) 2025-present Mintimate
  * Released under the MIT License.
- * 
+ *
  * 使用 EdgeOne Pages KV 存储作为数据库
  * KV 命名空间需要在 EdgeOne Pages 控制台绑定，变量名：TWIKOO_KV
- * 
+ *
  * 存储结构：
  * - comments:all    - 所有评论的 JSON 数组（单次读取，减少 KV 调用）
  * - config:main     - 系统配置
@@ -27,14 +27,14 @@ const COMMENTS_KEY = 'comments:all'
 /**
  * EdgeOne Pages Edge Function 入口
  */
-export async function onRequest(context) {
+export async function onRequest (context) {
   const { request } = context
-  
+
   // 处理 CORS 预检请求
   if (request.method === 'OPTIONS') {
     return handleCors(request)
   }
-  
+
   // 只处理 POST 请求
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({
@@ -47,7 +47,7 @@ export async function onRequest(context) {
   }
 
   let res = {}
-  
+
   try {
     // 验证内部调用
     const isInternal = request.headers.get('X-Twikoo-Internal') === 'true'
@@ -60,10 +60,10 @@ export async function onRequest(context) {
 
     const body = await request.json()
     const { action, data } = body
-    
+
     // 创建数据库操作对象
     const db = createKVDatabase()
-    
+
     switch (action) {
       case 'getComments':
         res = { code: RES_CODE.SUCCESS, data: await db.getComments(data.query || {}) }
@@ -102,7 +102,7 @@ export async function onRequest(context) {
     console.error('KV 操作错误：', e.message, e.stack)
     res = { code: RES_CODE.FAIL, message: `KV Error: ${e.message}` }
   }
-  
+
   return new Response(JSON.stringify(res), {
     headers: getCorsHeaders(request)
   })
@@ -110,14 +110,14 @@ export async function onRequest(context) {
 
 // ==================== CORS 处理 ====================
 
-function handleCors(request) {
+function handleCors (request) {
   return new Response(null, {
     status: 204,
     headers: getCorsHeaders(request)
   })
 }
 
-function getCorsHeaders(request) {
+function getCorsHeaders (request) {
   const origin = request.headers.get('origin') || '*'
   return {
     'Content-Type': 'application/json; charset=UTF-8',
@@ -130,7 +130,7 @@ function getCorsHeaders(request) {
 
 // ==================== 工具函数 ====================
 
-function generateUUID() {
+function generateUUID () {
   // 使用 Web Crypto API 生成标准 UUID v4（EdgeOne Edge Function 支持）
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID().replace(/-/g, '') // 移除连字符保持 32 位格式
@@ -152,55 +152,57 @@ function generateUUID() {
 
 // ==================== KV 数据库操作层（优化版） ====================
 
-function createKVDatabase() {
+function createKVDatabase () {
   if (typeof TWIKOO_KV === 'undefined') {
     throw new Error('未配置 TWIKOO_KV 命名空间，请在 EdgeOne Pages 控制台绑定 KV 存储')
   }
-  
+
   // 评论缓存（减少重复读取）
   let commentsCache = null
-  
+
   return {
     // 获取所有评论（单次 KV 读取）
-    async getAllComments() {
+    async getAllComments () {
       if (commentsCache !== null) {
         return commentsCache
       }
+      // eslint-disable-next-line no-undef
       const data = await TWIKOO_KV.get(COMMENTS_KEY)
       commentsCache = data ? JSON.parse(data) : []
       return commentsCache
     },
-    
+
     // 保存所有评论
-    async saveAllComments(comments) {
+    async saveAllComments (comments) {
       commentsCache = comments
+      // eslint-disable-next-line no-undef
       await TWIKOO_KV.put(COMMENTS_KEY, JSON.stringify(comments))
     },
-    
+
     // 查询评论（支持过滤条件）
-    async getComments(query = {}) {
+    async getComments (query = {}) {
       const allComments = await this.getAllComments()
       return filterComments(allComments, query)
     },
-    
+
     // 添加评论
-    async addComment(comment) {
+    async addComment (comment) {
       const id = comment._id || generateUUID()
       comment._id = id
       comment.id = id // 兼容性
-      
+
       const comments = await this.getAllComments()
       comments.push(comment)
       await this.saveAllComments(comments)
-      
+
       return { id }
     },
-    
+
     // 更新评论
-    async updateComment(id, updates) {
+    async updateComment (id, updates) {
       const comments = await this.getAllComments()
       const index = comments.findIndex(c => c._id === id)
-      
+
       if (index !== -1) {
         Object.assign(comments[index], updates)
         await this.saveAllComments(comments)
@@ -208,12 +210,12 @@ function createKVDatabase() {
       }
       return { updated: 0 }
     },
-    
+
     // 删除评论
-    async deleteComment(id) {
+    async deleteComment (id) {
       const comments = await this.getAllComments()
       const index = comments.findIndex(c => c._id === id)
-      
+
       if (index !== -1) {
         comments.splice(index, 1)
         await this.saveAllComments(comments)
@@ -221,18 +223,18 @@ function createKVDatabase() {
       }
       return { deleted: 0 }
     },
-    
+
     // 获取单条评论
-    async getComment(id) {
+    async getComment (id) {
       const comments = await this.getAllComments()
       return comments.find(c => c._id === id) || null
     },
-    
+
     // 批量添加评论
-    async bulkAddComments(newComments) {
+    async bulkAddComments (newComments) {
       const comments = await this.getAllComments()
       let insertedCount = 0
-      
+
       for (const comment of newComments) {
         const id = comment._id || generateUUID()
         comment._id = id
@@ -240,37 +242,40 @@ function createKVDatabase() {
         comments.push(comment)
         insertedCount++
       }
-      
+
       await this.saveAllComments(comments)
       return insertedCount
     },
-    
+
     // 获取配置
-    async getConfig() {
+    async getConfig () {
+      // eslint-disable-next-line no-undef
       const data = await TWIKOO_KV.get('config:main')
       return data ? JSON.parse(data) : {}
     },
-    
+
     // 保存配置
-    async saveConfig(newConfig) {
+    async saveConfig (newConfig) {
       const currentConfig = await this.getConfig()
       const merged = { ...currentConfig, ...newConfig }
+      // eslint-disable-next-line no-undef
       await TWIKOO_KV.put('config:main', JSON.stringify(merged))
       return { updated: 1 }
     },
-    
+
     // 获取计数器
-    async getCounter(url) {
+    async getCounter (url) {
       const key = `counter:${encodeURIComponent(url)}`
+      // eslint-disable-next-line no-undef
       const data = await TWIKOO_KV.get(key)
       return data ? JSON.parse(data) : null
     },
-    
+
     // 增加计数器
-    async incCounter(url, title) {
+    async incCounter (url, title) {
       const key = `counter:${encodeURIComponent(url)}`
       let counter = await this.getCounter(url)
-      
+
       if (counter) {
         counter.time = (counter.time || 0) + 1
         counter.title = title
@@ -284,7 +289,8 @@ function createKVDatabase() {
           updated: Date.now()
         }
       }
-      
+
+      // eslint-disable-next-line no-undef
       await TWIKOO_KV.put(key, JSON.stringify(counter))
       return 1
     }
@@ -293,9 +299,9 @@ function createKVDatabase() {
 
 // ==================== 评论过滤函数 ====================
 
-function filterComments(comments, query) {
+function filterComments (comments, query) {
   if (!Object.keys(query).length) return comments
-  
+
   return comments.filter(comment => {
     for (const [key, value] of Object.entries(query)) {
       if (key === '$or') {
@@ -311,13 +317,13 @@ function filterComments(comments, query) {
   })
 }
 
-function matchCondition(comment, key, value) {
+function matchCondition (comment, key, value) {
   const commentValue = comment[key]
-  
+
   if (value === null || value === undefined) {
     return commentValue === null || commentValue === undefined
   }
-  
+
   if (typeof value === 'object') {
     if ('$in' in value) {
       return value.$in.includes(commentValue)
@@ -326,8 +332,8 @@ function matchCondition(comment, key, value) {
       return commentValue !== value.$ne
     }
     if ('$exists' in value) {
-      return value.$exists 
-        ? (commentValue !== undefined && commentValue !== null && commentValue !== '') 
+      return value.$exists
+        ? (commentValue !== undefined && commentValue !== null && commentValue !== '')
         : (commentValue === undefined || commentValue === null || commentValue === '')
     }
     if ('$gt' in value) {
@@ -341,7 +347,7 @@ function matchCondition(comment, key, value) {
       return regex.test(commentValue)
     }
   }
-  
+
   return commentValue === value
 }
 

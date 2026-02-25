@@ -2,7 +2,7 @@
  * Twikoo EdgeOne Pages Node Function
  * (c) 2020-present iMaeGoo
  * Released under the MIT License.
- * 
+ *
  * 使用 twikoo-func 实现核心逻辑，通过 Edge Function 操作 KV 数据库
  */
 
@@ -54,14 +54,14 @@ const VERSION = '1.6.44'
 // 注入自定义依赖（对标 Cloudflare 版本）
 setCustomLibs({
   DOMPurify: {
-    sanitize(input) {
+    sanitize (input) {
       return input
     }
   },
   nodemailer: {
-    createTransport(mailConfig) {
+    createTransport (mailConfig) {
       return {
-        verify() {
+        verify () {
           if (!mailConfig.service || (mailConfig.service.toLowerCase() !== 'sendgrid' && mailConfig.service.toLowerCase() !== 'mailchannels')) {
             throw new Error('仅支持 SendGrid 和 MailChannels 邮件服务。')
           }
@@ -73,19 +73,19 @@ setCustomLibs({
           }
           return true
         },
-        sendMail({ from, to, subject, html }) {
+        sendMail ({ from, to, subject, html }) {
           if (mailConfig.service.toLowerCase() === 'sendgrid') {
             return fetch('https://api.sendgrid.com/v3/mail/send', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${mailConfig.auth.pass}`,
-                'Content-Type': 'application/json',
+                Authorization: `Bearer ${mailConfig.auth.pass}`,
+                'Content-Type': 'application/json'
               },
               body: JSON.stringify({
                 personalizations: [{ to: [{ email: to }] }],
                 from: { email: from },
                 subject,
-                content: [{ type: 'text/html', value: html }],
+                content: [{ type: 'text/html', value: html }]
               })
             })
           } else if (mailConfig.service.toLowerCase() === 'mailchannels') {
@@ -93,14 +93,14 @@ setCustomLibs({
               method: 'POST',
               headers: {
                 'X-Api-Key': mailConfig.auth.pass,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
               },
               body: JSON.stringify({
                 personalizations: [{ to: [{ email: to }] }],
                 from: { email: from },
                 subject,
-                content: [{ type: 'text/html', value: html }],
+                content: [{ type: 'text/html', value: html }]
               })
             })
           }
@@ -119,7 +119,7 @@ const xml2js = getXml2js()
 /**
  * 修复 OS 版本名称
  */
-function fixOS(ua) {
+function fixOS (ua) {
   const os = ua.getOS()
   if (!os.versionName) {
     if (os.name === 'Windows' && os.version === 'NT 11.0') {
@@ -132,8 +132,13 @@ function fixOS(ua) {
     } else if (os.name === 'Android') {
       const majorPlatformVersion = os.version?.split('.')[0]
       os.versionName = {
-        10: 'Quince Tart', 11: 'Red Velvet Cake', 12: 'Snow Cone',
-        13: 'Tiramisu', 14: 'Upside Down Cake', 15: 'Vanilla Ice Cream', 16: 'Baklava'
+        10: 'Quince Tart',
+        11: 'Red Velvet Cake',
+        12: 'Snow Cone',
+        13: 'Tiramisu',
+        14: 'Upside Down Cake',
+        15: 'Vanilla Ice Cream',
+        16: 'Baklava'
       }[majorPlatformVersion]
     } else if (ua.test(/harmony/i)) {
       os.name = 'Harmony'
@@ -148,7 +153,7 @@ function fixOS(ua) {
 /**
  * 获取回复人昵称
  */
-function getRuser(pid, comments = []) {
+function getRuser (pid, comments = []) {
   const comment = comments.find((item) => item._id === pid)
   return comment ? comment.nick : null
 }
@@ -156,7 +161,7 @@ function getRuser(pid, comments = []) {
 /**
  * 将评论记录转换为前端需要的格式（使用本地 IP 归属地查询）
  */
-function toCommentDto(comment, uid, replies = [], comments = [], cfg) {
+function toCommentDto (comment, uid, replies = [], comments = [], cfg) {
   let displayOs = ''
   let displayBrowser = ''
   if (cfg.SHOW_UA !== 'false') {
@@ -197,7 +202,7 @@ function toCommentDto(comment, uid, replies = [], comments = [], cfg) {
 /**
  * 筛除隐私字段，拼接回复列表（本地实现，使用自己的 IP 归属地查询）
  */
-function parseComment(comments, uid, cfg) {
+function parseComment (comments, uid, cfg) {
   const result = []
   for (const comment of comments) {
     if (!comment.rid) {
@@ -214,7 +219,7 @@ function parseComment(comments, uid, cfg) {
 /**
  * 为管理后台解析评论
  */
-function parseCommentForAdmin(comments) {
+function parseCommentForAdmin (comments) {
   for (const comment of comments) {
     comment.ipRegion = getIpRegion(comment.ip, true)
   }
@@ -225,11 +230,10 @@ function parseCommentForAdmin(comments) {
 let config = null
 const requestTimes = {}
 
-
-
 // ==================== 工具函数 ====================
 
-function getAllowedOrigin(req) {
+// eslint-disable-next-line no-unused-vars
+function getAllowedOrigin (req) {
   const origin = req.headers.origin
   const localhostRegex = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d{1,5})?$/
   if (localhostRegex.test(origin)) {
@@ -247,7 +251,7 @@ function getAllowedOrigin(req) {
 }
 
 // 获取 IP（优先使用 EdgeOne 提供的 eo-connecting-ip）
-function getIp(req) {
+function getIp (req) {
   return req.headers['eo-connecting-ip'] ||
          req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
          req.headers['x-real-ip'] ||
@@ -255,7 +259,7 @@ function getIp(req) {
          'unknown'
 }
 
-function protect(ip) {
+function protect (ip) {
   requestTimes[ip] = (requestTimes[ip] || 0) + 1
   if (requestTimes[ip] > MAX_REQUEST_TIMES) {
     logger.warn(`${ip} 当前请求次数为 ${requestTimes[ip]}，已超过最大请求次数`)
@@ -271,15 +275,15 @@ setInterval(() => {
 
 // ==================== KV 代理层 ====================
 
-function createKVProxy(req) {
+function createKVProxy (req) {
   // 使用 eo-pages-host（EdgeOne Pages 提供的原始域名）
   const host = req.headers['eo-pages-host'] || req.headers['x-forwarded-host'] || req.headers.host || 'localhost'
   const protocol = req.headers['x-forwarded-proto'] || 'https'
   const baseUrl = `${protocol}://${host}`
-  
-  async function callKV(action, data) {
+
+  async function callKV (action, data) {
     const kvUrl = `${baseUrl}/api/kv`
-    
+
     try {
       const response = await fetch(kvUrl, {
         method: 'POST',
@@ -289,9 +293,9 @@ function createKVProxy(req) {
         },
         body: JSON.stringify({ action, data })
       })
-      
+
       const text = await response.text()
-      
+
       let result
       try {
         result = JSON.parse(text)
@@ -299,51 +303,51 @@ function createKVProxy(req) {
         logger.error('[KV] JSON 解析失败:', text.substring(0, 200))
         throw new Error(`KV API 返回非 JSON: ${text.substring(0, 200)}`)
       }
-      
+
       if (result.code !== 0) {
         throw new Error(result.message || 'KV 操作失败')
       }
-      
+
       return result.data
     } catch (e) {
       logger.error('[KV] 调用异常:', e.message)
       throw e
     }
   }
-  
+
   return {
-    async getComments(query = {}) {
+    async getComments (query = {}) {
       return callKV('getComments', { query })
     },
-    async countComments(query = {}) {
+    async countComments (query = {}) {
       const comments = await this.getComments(query)
       return comments.length
     },
-    async addComment(comment) {
+    async addComment (comment) {
       return callKV('addComment', { comment })
     },
-    async updateComment(id, updates) {
+    async updateComment (id, updates) {
       return callKV('updateComment', { id, updates })
     },
-    async deleteComment(id) {
+    async deleteComment (id) {
       return callKV('deleteComment', { id })
     },
-    async getComment(id) {
+    async getComment (id) {
       return callKV('getComment', { id })
     },
-    async bulkAddComments(comments) {
+    async bulkAddComments (comments) {
       return callKV('bulkAddComments', { comments })
     },
-    async getConfig() {
+    async getConfig () {
       return callKV('getConfig', {})
     },
-    async saveConfig(newConfig) {
+    async saveConfig (newConfig) {
       return callKV('saveConfig', { config: newConfig })
     },
-    async getCounter(url) {
+    async getCounter (url) {
       return callKV('getCounter', { url })
     },
-    async incCounter(url, title) {
+    async incCounter (url, title) {
       return callKV('incCounter', { url, title })
     }
   }
@@ -351,7 +355,7 @@ function createKVProxy(req) {
 
 // ==================== 配置管理 ====================
 
-async function readConfig(req) {
+async function readConfig (req) {
   try {
     const db = createKVProxy(req)
     config = await db.getConfig()
@@ -362,7 +366,7 @@ async function readConfig(req) {
   return config
 }
 
-async function writeConfig(db, newConfig) {
+async function writeConfig (db, newConfig) {
   if (!Object.keys(newConfig).length) return 0
   logger.info('写入配置')
   await db.saveConfig(newConfig)
@@ -370,13 +374,13 @@ async function writeConfig(db, newConfig) {
   return 1
 }
 
-function isAdmin(accessToken) {
+function isAdmin (accessToken) {
   return config && config.ADMIN_PASS === md5(accessToken)
 }
 
 // ==================== 密码管理 ====================
 
-async function setPassword(event, db, accessToken) {
+async function setPassword (event, db, accessToken) {
   const isAdminUser = isAdmin(accessToken)
   if (config.ADMIN_PASS && !isAdminUser) {
     return { code: RES_CODE.PASS_EXIST, message: '请先登录再修改密码' }
@@ -386,7 +390,7 @@ async function setPassword(event, db, accessToken) {
   return { code: RES_CODE.SUCCESS }
 }
 
-async function login(password) {
+async function login (password) {
   if (!config) {
     return { code: RES_CODE.CONFIG_NOT_EXIST, message: '数据库无配置' }
   }
@@ -401,7 +405,7 @@ async function login(password) {
 
 // ==================== 评论读取 ====================
 
-async function commentGet(event, db, accessToken) {
+async function commentGet (event, db, accessToken) {
   const res = {}
   try {
     validate(event, ['url'])
@@ -409,52 +413,52 @@ async function commentGet(event, db, accessToken) {
     const isAdminUser = isAdmin(accessToken)
     const limit = parseInt(config.COMMENT_PAGE_SIZE) || 8
     let more = false
-    
+
     const urlQuery = getUrlQuery(event.url)
-    
+
     // 获取所有评论
-    let allComments = await db.getComments()
-    
+    const allComments = await db.getComments()
+
     // 过滤主楼评论
-    let mainComments = allComments.filter(c => 
-      urlQuery.includes(c.url) && 
+    let mainComments = allComments.filter(c =>
+      urlQuery.includes(c.url) &&
       (!c.rid || c.rid === '') &&
       (c.isSpam !== true || c.uid === uid || isAdminUser)
     )
-    
+
     // 计算总数
     const count = mainComments.length
-    
+
     // 排序
     mainComments.sort((a, b) => b.created - a.created)
-    
+
     // 处理置顶和分页
     let top = []
     if (!config.TOP_DISABLED && !event.before) {
       top = mainComments.filter(c => c.top === true)
       mainComments = mainComments.filter(c => c.top !== true)
     }
-    
+
     // 分页
     if (event.before) {
       mainComments = mainComments.filter(c => c.created < event.before)
     }
-    
+
     if (mainComments.length > limit) {
       more = true
       mainComments = mainComments.slice(0, limit)
     }
-    
+
     // 合并置顶
     mainComments = [...top, ...mainComments]
-    
+
     // 获取回复
     const mainIds = mainComments.map(c => c._id)
-    const replies = allComments.filter(c => 
+    const replies = allComments.filter(c =>
       mainIds.includes(c.rid) &&
       (c.isSpam !== true || c.uid === uid || isAdminUser)
     )
-    
+
     res.data = parseComment([...mainComments, ...replies], uid, config)
     res.more = more
     res.count = count
@@ -467,23 +471,23 @@ async function commentGet(event, db, accessToken) {
 
 // ==================== 管理员评论操作 ====================
 
-async function commentGetForAdmin(event, db, accessToken) {
+async function commentGetForAdmin (event, db, accessToken) {
   const res = {}
   const isAdminUser = isAdmin(accessToken)
   if (isAdminUser) {
     validate(event, ['per', 'page'])
-    
+
     let comments = await db.getComments()
-    
+
     if (event.type === 'VISIBLE') {
       comments = comments.filter(c => c.isSpam !== true)
     } else if (event.type === 'HIDDEN') {
       comments = comments.filter(c => c.isSpam === true)
     }
-    
+
     if (event.keyword) {
       const keyword = event.keyword.toLowerCase()
-      comments = comments.filter(c => 
+      comments = comments.filter(c =>
         (c.nick && c.nick.toLowerCase().includes(keyword)) ||
         (c.mail && c.mail.toLowerCase().includes(keyword)) ||
         (c.link && c.link.toLowerCase().includes(keyword)) ||
@@ -493,13 +497,13 @@ async function commentGetForAdmin(event, db, accessToken) {
         (c.href && c.href.toLowerCase().includes(keyword))
       )
     }
-    
+
     comments.sort((a, b) => b.created - a.created)
-    
+
     const count = comments.length
     const start = event.per * (event.page - 1)
     const data = comments.slice(start, start + event.per)
-    
+
     res.code = RES_CODE.SUCCESS
     res.count = count
     res.data = parseCommentForAdmin(data)
@@ -510,7 +514,7 @@ async function commentGetForAdmin(event, db, accessToken) {
   return res
 }
 
-async function commentSetForAdmin(event, db, accessToken) {
+async function commentSetForAdmin (event, db, accessToken) {
   const res = {}
   const isAdminUser = isAdmin(accessToken)
   if (isAdminUser) {
@@ -528,7 +532,7 @@ async function commentSetForAdmin(event, db, accessToken) {
   return res
 }
 
-async function commentDeleteForAdmin(event, db, accessToken) {
+async function commentDeleteForAdmin (event, db, accessToken) {
   const res = {}
   const isAdminUser = isAdmin(accessToken)
   if (isAdminUser) {
@@ -543,7 +547,7 @@ async function commentDeleteForAdmin(event, db, accessToken) {
   return res
 }
 
-async function commentImportForAdmin(event, db, accessToken) {
+async function commentImportForAdmin (event, db, accessToken) {
   const res = {}
   let logText = ''
   const log = (message) => {
@@ -599,7 +603,7 @@ async function commentImportForAdmin(event, db, accessToken) {
   return res
 }
 
-async function commentExportForAdmin(event, db, accessToken) {
+async function commentExportForAdmin (event, db, accessToken) {
   const res = {}
   const isAdminUser = isAdmin(accessToken)
   if (isAdminUser) {
@@ -613,7 +617,7 @@ async function commentExportForAdmin(event, db, accessToken) {
   return res
 }
 
-async function readFile(file, type, log) {
+async function readFile (file, type, log) {
   try {
     let content = file.toString('utf8')
     log('评论文件读取成功')
@@ -632,14 +636,14 @@ async function readFile(file, type, log) {
 
 // ==================== 点赞 ====================
 
-async function commentLike(event, db, accessToken) {
+async function commentLike (event, db, accessToken) {
   const res = {}
   validate(event, ['id'])
   const uid = accessToken
   const comment = await db.getComment(event.id)
-  
+
   if (comment) {
-    let likes = comment.like || []
+    const likes = comment.like || []
     const index = likes.indexOf(uid)
     if (index === -1) {
       likes.push(uid)
@@ -656,46 +660,46 @@ async function commentLike(event, db, accessToken) {
 
 // ==================== 评论提交 ====================
 
-async function commentSubmit(event, req, db, accessToken) {
+async function commentSubmit (event, req, db, accessToken) {
   const res = {}
   validate(event, ['url', 'ua', 'comment'])
-  
+
   const ip = getIp(req)
-  
+
   // 限流检查
   await limitFilter(db, ip)
-  
+
   // 验证码检查
   await checkCaptcha(event, ip)
-  
+
   // 解析评论数据
   const data = await parseCommentData(event, req, accessToken, ip)
-  
+
   // 保存评论
   const result = await db.addComment(data)
   data.id = result.id
   data._id = result.id
   res.id = result.id
-  
+
   // 异步处理垃圾检测和通知
   postSubmit(data, db).catch(e => {
     logger.error('POST_SUBMIT 失败', e.message)
   })
-  
+
   return res
 }
 
-async function parseCommentData(event, req, accessToken, ip) {
+async function parseCommentData (event, req, accessToken, ip) {
   const timestamp = Date.now()
   const isAdminUser = isAdmin(accessToken)
   const isBloggerMail = equalsMail(config.BLOGGER_EMAIL, event.mail)
-  
+
   if (isBloggerMail && !isAdminUser) {
     throw new Error('请先登录管理面板，再使用博主身份发送评论')
   }
-  
+
   const hashMethod = config.GRAVATAR_CDN === 'cravatar.cn' ? md5 : sha256
-  
+
   const commentDo = {
     _id: uuidv4().replace(/-/g, ''),
     uid: accessToken,
@@ -715,7 +719,7 @@ async function parseCommentData(event, req, accessToken, ip) {
     created: timestamp,
     updated: timestamp
   }
-  
+
   // 处理 QQ 邮箱和头像
   if (isQQ(event.mail)) {
     commentDo.mail = addQQMailSuffix(event.mail)
@@ -726,14 +730,14 @@ async function parseCommentData(event, req, accessToken, ip) {
       logger.warn('获取 QQ 头像失败：', e.message)
     }
   }
-  
+
   return commentDo
 }
 
-async function postSubmit(comment, db) {
+async function postSubmit (comment, db) {
   try {
     logger.log('POST_SUBMIT')
-    
+
     // 获取父评论
     const getParentComment = async (c) => {
       if (c.pid) {
@@ -741,14 +745,14 @@ async function postSubmit(comment, db) {
       }
       return null
     }
-    
+
     // 垃圾检测
     const isSpam = await postCheckSpam(comment, config)
     if (isSpam && !comment.isSpam) {
       await db.updateComment(comment._id, { isSpam: true, updated: Date.now() })
       comment.isSpam = isSpam
     }
-    
+
     // 发送通知
     await sendNotice(comment, config, getParentComment)
   } catch (e) {
@@ -756,23 +760,23 @@ async function postSubmit(comment, db) {
   }
 }
 
-async function limitFilter(db, ip) {
+async function limitFilter (db, ip) {
   let limitPerMinute = parseInt(config.LIMIT_PER_MINUTE)
   if (Number.isNaN(limitPerMinute)) limitPerMinute = 10
-  
+
   if (limitPerMinute) {
     const comments = await db.getComments()
-    const recentComments = comments.filter(c => 
+    const recentComments = comments.filter(c =>
       c.ip === ip && c.created > Date.now() - 600000
     )
     if (recentComments.length > limitPerMinute) {
       throw new Error('发言频率过高')
     }
   }
-  
+
   let limitPerMinuteAll = parseInt(config.LIMIT_PER_MINUTE_ALL)
   if (Number.isNaN(limitPerMinuteAll)) limitPerMinuteAll = 10
-  
+
   if (limitPerMinuteAll) {
     const comments = await db.getComments()
     const recentComments = comments.filter(c => c.created > Date.now() - 600000)
@@ -782,7 +786,7 @@ async function limitFilter(db, ip) {
   }
 }
 
-async function checkCaptcha(event, ip) {
+async function checkCaptcha (event, ip) {
   if (config.TURNSTILE_SITE_KEY && config.TURNSTILE_SECRET_KEY) {
     await checkTurnstileCaptcha({
       ip: ip,
@@ -794,7 +798,7 @@ async function checkCaptcha(event, ip) {
 
 // ==================== 配置操作 ====================
 
-async function setConfig(event, db, accessToken) {
+async function setConfig (event, db, accessToken) {
   const isAdminUser = isAdmin(accessToken)
   if (isAdminUser) {
     await writeConfig(db, event.config)
@@ -806,7 +810,7 @@ async function setConfig(event, db, accessToken) {
 
 // ==================== 计数器 ====================
 
-async function counterGet(event, db) {
+async function counterGet (event, db) {
   const res = {}
   try {
     validate(event, ['url'])
@@ -822,16 +826,16 @@ async function counterGet(event, db) {
 
 // ==================== 评论统计 ====================
 
-async function getCommentsCount(event, db) {
+async function getCommentsCount (event, db) {
   const res = {}
   try {
     validate(event, ['urls'])
     const comments = await db.getComments()
-    
+
     res.data = []
     for (const url of event.urls) {
       const urlVariants = getUrlQuery(url)
-      const count = comments.filter(c => 
+      const count = comments.filter(c =>
         urlVariants.includes(c.url) &&
         c.isSpam !== true &&
         (event.includeReply || !c.rid || c.rid === '')
@@ -844,27 +848,27 @@ async function getCommentsCount(event, db) {
   return res
 }
 
-async function getRecentComments(event, db) {
+async function getRecentComments (event, db) {
   const res = {}
   try {
     let comments = await db.getComments()
-    
+
     comments = comments.filter(c => c.isSpam !== true)
-    
+
     if (event.urls && event.urls.length) {
       const urlsQuery = getUrlsQuery(event.urls)
       comments = comments.filter(c => urlsQuery.includes(c.url))
     }
-    
+
     if (!event.includeReply) {
       comments = comments.filter(c => !c.rid || c.rid === '')
     }
-    
+
     comments.sort((a, b) => b.created - a.created)
-    
+
     const pageSize = Math.min(event.pageSize || 10, 100)
     comments = comments.slice(0, pageSize)
-    
+
     res.data = comments.map(comment => ({
       id: comment._id,
       url: comment.url,
@@ -883,21 +887,22 @@ async function getRecentComments(event, db) {
 }
 
 // EdgeOne Pages Node Function 入口
-export async function onRequest(context) {
+export async function onRequest (context) {
   const { request } = context
-  
+
   // 将 EdgeOne 请求转换为 Express 可处理的格式
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve) => {
     try {
       const url = new URL(request.url)
       const method = request.method
-      
+
       // 构造模拟的 req 对象
       const headers = {}
       request.headers.forEach((value, key) => {
         headers[key.toLowerCase()] = value
       })
-      
+
       let body = null
       if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
         try {
@@ -906,7 +911,7 @@ export async function onRequest(context) {
           body = {}
         }
       }
-      
+
       const req = {
         method,
         url: url.pathname + url.search,
@@ -917,12 +922,12 @@ export async function onRequest(context) {
         protocol: url.protocol.replace(':', ''),
         get: (name) => headers[name.toLowerCase()]
       }
-      
+
       // 构造模拟的 res 对象
       let statusCode = 200
       const resHeaders = {}
       let resBody = null
-      
+
       const res = {
         status: (code) => { statusCode = code; return res },
         setHeader: (name, value) => { resHeaders[name] = value },
@@ -938,17 +943,17 @@ export async function onRequest(context) {
         },
         end: () => finish()
       }
-      
-      function finish() {
+
+      function finish () {
         resolve(new Response(resBody, {
           status: statusCode,
           headers: resHeaders
         }))
       }
-      
+
       // 手动处理路由
       console.log(`[${new Date().toISOString()}] ${method} ${url.pathname}`)
-      
+
       // CORS 处理
       const origin = headers.origin
       if (origin) {
@@ -958,12 +963,12 @@ export async function onRequest(context) {
         res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version')
         res.setHeader('Access-Control-Max-Age', '600')
       }
-      
+
       if (method === 'OPTIONS') {
         res.status(204).end()
         return
       }
-      
+
       if (method === 'GET') {
         res.json({
           code: RES_CODE.SUCCESS,
@@ -972,13 +977,13 @@ export async function onRequest(context) {
         })
         return
       }
-      
+
       if (method === 'POST') {
         // 调用主处理逻辑
         await handlePost(req, res)
         return
       }
-      
+
       res.status(404).json({ code: 404, message: 'Not Found' })
     } catch (e) {
       console.error('onRequest error:', e)
@@ -991,30 +996,30 @@ export async function onRequest(context) {
 }
 
 // POST 请求处理主逻辑
-async function handlePost(req, res) {
+async function handlePost (req, res) {
   let accessToken
   const event = req.body || {}
   const ip = getIp(req)
-  
+
   logger.log('请求 IP：', ip)
   logger.log('请求函数：', event.event)
   logger.log('请求参数：', event)
-  
+
   let result = {}
-  
+
   try {
     // 防护
     protect(ip)
-    
+
     // 生成或使用 accessToken
     accessToken = event.accessToken || uuidv4().replace(/-/g, '')
-    
+
     // 读取配置
     await readConfig(req)
-    
+
     // 创建数据库操作对象
     const db = createKVProxy(req)
-    
+
     switch (event.event) {
       case 'GET_FUNC_VERSION':
         result = getFuncVersion({ VERSION })
@@ -1086,7 +1091,7 @@ async function handlePost(req, res) {
           result.version = VERSION
         }
     }
-    
+
     if (!result.code && !event.accessToken) {
       result.accessToken = accessToken
     }
@@ -1095,7 +1100,7 @@ async function handlePost(req, res) {
     result.code = RES_CODE.FAIL
     result.message = e.message
   }
-  
+
   logger.log('请求返回：', result)
   res.json(result)
 }
