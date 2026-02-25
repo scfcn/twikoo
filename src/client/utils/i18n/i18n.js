@@ -92,7 +92,8 @@ const imageBedServices = [
   'see (https://s.ee)',
   'lskypro',
   'piclist',
-  'easyimage'
+  'easyimage',
+  'chevereto'
 ].map(s => `"${s}"`)
 
 const customImageBedServices = [
