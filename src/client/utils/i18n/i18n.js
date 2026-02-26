@@ -514,6 +514,15 @@ export default {
     '管理パネルのログイン画面を非表示にする。 "パスワード" を設定でき、 "名前" フィールドに同じ "パスワード" を入力した場合のみ、管理パネルのログイン画面が表示されます。空白の場合、管理パネルのログイン画面は非表示にされません。',
     '환경설정 버튼을 숨깁니다. 암호를 설정하여, 닉네임 입력란에 동일한 암호를 입력해야만 환경설정 버튼이 표시됩니다. 비워두면 버튼을 숨기지 않습니다.'
   ],
+  [S.ACI + '_QQ_API_KEY']: [
+    'QQ昵称API密钥，用于获取QQ昵称。前往 https://api.nsuuu.com 获取',
+    'QQ暱稱API密鑰，用於獲取QQ暱稱。前往 https://api.nsuuu.com 獲取',
+    'QQ暱稱API密鑰，用於獲取QQ暱稱。前往 https://api.nsuuu.com 獲取',
+    'QQ nickname API key for fetching QQ nickname. Get it from https://api.nsuuu.com',
+    'QQ laqab API kaliti, QQ laqabni olish uchun. https://api.nsuuu.com dan oling',
+    'QQニックネームAPIキー。QQニックネームの取得に使用します。https://api.nsuuu.com で取得',
+    'QQ 닉네임 API 키. https://api.nsuuu.com 에서 발급'
+  ],
   [S.ACI + '_HIGHLIGHT']: [
     '启用代码高亮功能。如果您的主题和代码高亮有冲突，请设为 false。默认：true',
     '啟用代碼高亮功能。如果您的主題和代碼高亮有衝突，請設為 false。預設：true',
@@ -568,6 +577,24 @@ export default {
     'Тасвир токен белгиси. Қслоуд учун кераксиз',
     '画像ホスティングトークン。qcloud画像ホスティングを利用する場合は設定の必要はありません',
     '이미지 호스팅 토큰. qcloud은 설정 불필요.'
+  ],
+  [S.ACI + '_NSFW_API_URL']: [
+    'NSFW 图片检测 API 地址，用于检测上传图片是否包含不当内容。无需附带 /classify 或 /classify-many',
+    'NSFW 圖片檢測 API 地址，用於檢測上傳圖片是否包含不當內容。無需附帶 /classify 或 /classify-many',
+    'NSFW 圖片檢測 API 地址，用於檢測上傳圖片是否包含不當內容。無需附帶 /classify 或 /classify-many',
+    'NSFW image detection API URL for detecting inappropriate content in uploaded images. No need to include /classify or /classify-many',
+    'NSFW расмни аниқлаш API URL. /classify ёки /classify-many ни қўшиш шарт эмас',
+    'NSFW画像検出API URL。/classifyや/classify-manyを含める必要はありません',
+    'NSFW 이미지 감지 API URL. /classify 또는 /classify-many를 포함할 필요 없음'
+  ],
+  [S.ACI + '_NSFW_THRESHOLD']: [
+    'NSFW 检测阈值（0-1），当检测分数高于此值时拒绝上传。默认：0.5',
+    'NSFW 檢測閾值（0-1），當檢測分數高於此值時拒絕上傳。預設：0.5',
+    'NSFW 檢測閾值（0-1），當檢測分數高於此值時拒絕上傳。預設：0.5',
+    'NSFW detection threshold (0-1). Upload will be rejected if score exceeds this value. Default: 0.5',
+    'NSFW аниқлаш чегараси (0-1). Баҳо бу қийматдан ошса юклаш рад қилинади. Стандарт: 0.5',
+    'NSFW検出しきい値（0-1）。スコアがこの値を超えるとアップロードが拒否されます。デフォルト：0.5',
+    'NSFW 감지 임계값 (0-1). 점수가 이 값을 초과하면 업로드가 거부됩니다. 기본값: 0.5'
   ],
   [S.ACI + '_LIGHTBOX']: [
     '使用简易图片点击放大效果。默认：false',
@@ -676,6 +703,24 @@ export default {
     'Turnstile CAPTCHA Secret Key',
     'Turnstile CAPTCHAのシークレットキー',
     'Turnstile CAPTCHA Secret Key'
+  ],
+  [S.ACI + '_GEETEST_CAPTCHA_ID']: [
+    '极验验证码的 Captcha ID。申请地址: https://www.geetest.com',
+    '极验验证码的 Captcha ID。申请地址: https://www.geetest.com',
+    '极验验证码的 Captcha ID。申请地址: https://www.geetest.com',
+    'GeeTest CAPTCHA ID. Get from: https://www.geetest.com',
+    'GeeTest CAPTCHA ID. Get from: https://www.geetest.com',
+    'GeeTest CAPTCHA ID. 参照: https://www.geetest.com',
+    'GeeTest CAPTCHA ID. 발급처: https://www.geetest.com'
+  ],
+  [S.ACI + '_GEETEST_CAPTCHA_KEY']: [
+    '极验验证码的 Captcha Key',
+    '极验验证码的 Captcha Key',
+    '极验验证码的 Captcha Key',
+    'GeeTest CAPTCHA Key',
+    'GeeTest CAPTCHA Key',
+    'GeeTest CAPTCHA Key',
+    'GeeTest CAPTCHA Key'
   ],
   [S.ACI + '_QCLOUD_SECRET_ID']: [
     '腾讯云 secret id，用于垃圾评论检测。同时设置腾讯云和 Akismet 时，只有腾讯云会生效。注册：https://twikoo.js.org/cms.html',
@@ -1468,6 +1513,15 @@ export default {
     'РАСМ ЮКЛАНМАДИ',
     '画像のアップロード失敗',
     '이미지 업로드 실패'
+  ],
+  IMAGE_UPLOAD_NSFW: [
+    '图片包含不当内容，禁止上传',
+    '圖片包含不當內容，禁止上傳',
+    '圖片包含不當內容，禁止上傳',
+    'Image contains inappropriate content, upload rejected',
+    'Расм ноқулай мазмунни ўз ичига олади, юклаш рад қилинди',
+    '画像に不適切なコンテンツが含まれているため、アップロードが拒否されました',
+    '이미지에 부적절한 콘텐츠가 포함되어 있어 업로드가 거부되었습니다'
   ],
   IMAGE_UPLOAD_FAILED_NO_CONF: [
     '博主未配置图床服务',

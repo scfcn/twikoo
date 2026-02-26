@@ -29,6 +29,7 @@ const {
   getPasswordStatus,
   preCheckSpam,
   checkTurnstileCaptcha,
+  checkGeeTestCaptcha,
   getConfig,
   getConfigForAdmin,
   validate
@@ -690,6 +691,16 @@ async function checkCaptcha (comment) {
       ip: auth.getClientIP(),
       turnstileToken: comment.turnstileToken,
       turnstileTokenSecretKey: config.TURNSTILE_SECRET_KEY
+    })
+  }
+  if (config.GEETEST_CAPTCHA_ID && config.GEETEST_CAPTCHA_KEY) {
+    await checkGeeTestCaptcha({
+      geeTestCaptchaId: config.GEETEST_CAPTCHA_ID,
+      geeTestCaptchaKey: config.GEETEST_CAPTCHA_KEY,
+      geeTestLotNumber: comment.geeTestLotNumber,
+      geeTestCaptchaOutput: comment.geeTestCaptchaOutput,
+      geeTestPassToken: comment.geeTestPassToken,
+      geeTestGenTime: comment.geeTestGenTime
     })
   }
 }

@@ -34,6 +34,7 @@ const {
   getPasswordStatus,
   preCheckSpam,
   checkTurnstileCaptcha,
+  checkGeeTestCaptcha,
   getConfig,
   getConfigForAdmin,
   validate
@@ -719,11 +720,26 @@ async function limitFilter (request) {
 }
 
 async function checkCaptcha (comment, request) {
+  logger.log('验证码配置:', {
+    TURNSTILE_SITE_KEY: config.TURNSTILE_SITE_KEY,
+    GEETEST_CAPTCHA_ID: config.GEETEST_CAPTCHA_ID,
+    GEETEST_CAPTCHA_KEY: config.GEETEST_CAPTCHA_KEY ? '***' : undefined
+  })
   if (config.TURNSTILE_SITE_KEY && config.TURNSTILE_SECRET_KEY) {
     await checkTurnstileCaptcha({
       ip: getIp(request),
       turnstileToken: comment.turnstileToken,
       turnstileTokenSecretKey: config.TURNSTILE_SECRET_KEY
+    })
+  }
+  if (config.GEETEST_CAPTCHA_ID && config.GEETEST_CAPTCHA_KEY) {
+    await checkGeeTestCaptcha({
+      geeTestCaptchaId: config.GEETEST_CAPTCHA_ID,
+      geeTestCaptchaKey: config.GEETEST_CAPTCHA_KEY,
+      geeTestLotNumber: comment.geeTestLotNumber,
+      geeTestCaptchaOutput: comment.geeTestCaptchaOutput,
+      geeTestPassToken: comment.geeTestPassToken,
+      geeTestGenTime: comment.geeTestGenTime
     })
   }
 }

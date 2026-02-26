@@ -13,7 +13,8 @@ module.exports = {
     NEED_LOGIN: 1024,
     FORBIDDEN: 1403,
     AKISMET_ERROR: 1030,
-    UPLOAD_FAILED: 1040
+    UPLOAD_FAILED: 1040,
+    NSFW_REJECTED: 1041
   },
   MAX_REQUEST_TIMES: parseInt(process.env.TWIKOO_THROTTLE) || 250
 }

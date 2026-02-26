@@ -61,12 +61,12 @@ function getConfig ({ extractCss }) {
       })
     ],
     devServer: {
-      static: [{
+      static: {
         directory: BUILD_PATH,
         publicPath: '/dist/',
         serveIndex: true,
         watch: true
-      }],
+      },
       port: 9820,
       host: 'localhost',
       open: true,

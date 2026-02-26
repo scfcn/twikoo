@@ -155,7 +155,7 @@ export default {
       this.currentPage = e
       this.getComments()
     },
-    handleView(comment) {
+    handleView (comment) {
       const targetUrl = `${comment.url}#${comment._id}`
       try {
         const url = new URL(targetUrl)
