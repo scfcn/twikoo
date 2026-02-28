@@ -102,13 +102,16 @@ export default {
       }
     },
     getQQNick (qqNum) {
-      const url = `https://api.qjqq.cn/api/qqinfo?qq=${qqNum}`
+      const qqApiKey = (this.config && this.config.QQ_API_KEY) || ''
+      const url = `https://v1.nsuuu.com/api/qqname?key=${encodeURIComponent(qqApiKey)}&qq=${qqNum}`
       const xhr = new XMLHttpRequest()
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4 && xhr.status === 200) {
           const response = JSON.parse(xhr.responseText)
-          this.metaData.nick = response.name
-          this.updateMeta()
+          if (response.code === 200 && response.data && response.data.nick) {
+            this.metaData.nick = response.data.nick
+            this.updateMeta()
+          }
         }
       }
       xhr.open('GET', url)

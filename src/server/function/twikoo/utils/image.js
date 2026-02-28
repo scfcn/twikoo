@@ -16,6 +16,14 @@ const fn = {
       if (!config.IMAGE_CDN || !config.IMAGE_CDN_TOKEN) {
         throw new Error('未配置图片上传服务')
       }
+      if (config.NSFW_API_URL) {
+        const nsfwResult = await fn.checkNsfw({ photo, config })
+        if (nsfwResult.rejected) {
+          res.code = RES_CODE.NSFW_REJECTED
+          res.err = nsfwResult.message
+          return res
+        }
+      }
       // tip: qcloud 图床走前端上传，其他图床走后端上传
       if (config.IMAGE_CDN === '7bu') {
         await fn.uploadImageToLskyPro({ photo, fileName, config, res, imageCdn: 'https://7bu.top' })
@@ -40,6 +48,33 @@ const fn = {
       res.err = e.message
     }
     return res
+  },
+  async checkNsfw ({ photo, config }) {
+    const result = { rejected: false, message: '' }
+    try {
+      const threshold = parseFloat(config.NSFW_THRESHOLD) || 0.5
+      const apiUrl = config.NSFW_API_URL.replace(/\/$/, '')
+      const formData = new FormData()
+      formData.append('image', fn.base64UrlToReadStream(photo, 'nsfw_check.jpg'))
+      const response = await axios.post(`${apiUrl}/classify`, formData, {
+        headers: {
+          ...formData.getHeaders()
+        },
+        timeout: 30000
+      })
+      const scores = response.data
+      if (scores && typeof scores === 'object') {
+        const nsfwScore = (scores.porn || 0) + (scores.hentai || 0) + (scores.sexy || 0)
+        logger.info('NSFW检测分数:', nsfwScore, '阈值:', threshold)
+        if (nsfwScore > threshold) {
+          result.rejected = true
+          result.message = `图片包含不当内容，检测分数 ${nsfwScore.toFixed(3)} 超过阈值 ${threshold}`
+        }
+      }
+    } catch (e) {
+      logger.error('NSFW检测失败:', e.message)
+    }
+    return result
   },
   async uploadImageToSee ({ photo, fileName, config, res, imageCdn }) {
     // S.EE 图床 https://s.ee (原 SM.MS)

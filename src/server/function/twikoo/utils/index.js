@@ -75,6 +75,8 @@ const fn = {
       }
     }
     const showRegion = !!config.SHOW_REGION && config.SHOW_REGION !== 'false'
+    const ups = comment.ups || []
+    const downs = comment.downs || []
     return {
       id: comment._id.toString(),
       nick: comment.nick,
@@ -87,7 +89,10 @@ const fn = {
       ipRegion: showRegion ? fn.getIpRegion({ ip: comment.ip }) : '',
       master: comment.master,
       like: comment.like ? comment.like.length : 0,
-      liked: comment.like ? comment.like.findIndex((item) => item === uid) > -1 : false,
+      ups: ups.length,
+      downs: downs.length,
+      liked: ups.includes(uid),
+      disliked: downs.includes(uid),
       replies: replies,
       rid: comment.rid,
       pid: comment.pid,
@@ -304,6 +309,34 @@ const fn = {
       throw new Error('验证码检测失败: ' + e.message)
     }
   },
+  async checkGeeTestCaptcha ({ geeTestCaptchaId, geeTestCaptchaKey, geeTestLotNumber, geeTestCaptchaOutput, geeTestPassToken, geeTestGenTime }) {
+    try {
+      logger.log('极验验证参数:', { geeTestCaptchaId, geeTestCaptchaKey: geeTestCaptchaKey ? '***' : undefined, geeTestLotNumber })
+      const crypto = require('crypto')
+      const signToken = crypto
+        .createHmac('sha256', geeTestCaptchaKey)
+        .update(geeTestLotNumber)
+        .digest('hex')
+      const params = new URLSearchParams()
+      params.append('lot_number', geeTestLotNumber)
+      params.append('captcha_output', geeTestCaptchaOutput)
+      params.append('pass_token', geeTestPassToken)
+      params.append('gen_time', geeTestGenTime)
+      params.append('sign_token', signToken)
+      logger.log('极验请求参数:', params.toString())
+      const url = `https://gcaptcha4.geetest.com/validate?captcha_id=${geeTestCaptchaId}`
+      const { data } = await axios.post(url, params.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      })
+      logger.log('极验验证码检测结果', JSON.stringify(data))
+      if (data.result !== 'success') {
+        logger.error('极验验证失败详情:', data)
+        throw new Error(data.reason || data.msg || '验证码错误')
+      }
+    } catch (e) {
+      throw new Error('极验验证码检测失败: ' + e.message)
+    }
+  },
   async getConfig ({ config, VERSION, isAdmin }) {
     return {
       code: RES_CODE.SUCCESS,
@@ -329,7 +362,9 @@ const fn = {
         HIGHLIGHT_THEME: config.HIGHLIGHT_THEME,
         HIGHLIGHT_PLUGIN: config.HIGHLIGHT_PLUGIN,
         LIMIT_LENGTH: config.LIMIT_LENGTH,
-        TURNSTILE_SITE_KEY: config.TURNSTILE_SITE_KEY
+        TURNSTILE_SITE_KEY: config.TURNSTILE_SITE_KEY,
+        GEETEST_CAPTCHA_ID: config.GEETEST_CAPTCHA_ID,
+        QQ_API_KEY: config.QQ_API_KEY
       }
     }
   },
